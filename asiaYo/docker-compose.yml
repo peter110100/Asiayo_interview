@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      APP_ENV: local
+      APP_KEY: base64:Hx3hJqffsLSmixeGwCWAHiB5c8+iThYxv4Y/WBhHTZ0=
+      APP_DEBUG: true
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: laravel
+      DB_USERNAME: postgres
+      DB_PASSWORD: secret
+      DB_CACHE_CONNECTION: pgsql
+      DB_CACHE_TABLE: cache
+      DB_CACHE_LOCK_CONNECTION: pgsql
+      DB_CACHE_LOCK_TABLE: cache_locks
+      SESSION_DRIVER: database
+      CACHE_DRIVER: file
+    volumes:
+      - ./:/var/www/html
+      - ./public:/var/www/html/public
+      - ./storage/framework/views:/var/www/html/storage/framework/views
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    container_name: laravel_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: laravel
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      
+  artisan-migrate:  
+      build: .
+      depends_on:
+        - app
+      command: php artisan migrate
+      environment:
+        - DB_HOST=db
+volumes:
+  dbdata:
+    driver: local
