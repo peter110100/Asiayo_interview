@@ -1,0 +1,54 @@
+SQL
+題目一:
+請寫出一條 SQL 查詢語句,列出在 2023 年 5 月下訂的訂單,使用台幣 (TWD) 付款且 5 月總金
+額最多的前 10 筆的 bnb_id、bnb_name,以及 5 月各旅宿總金額 (may_amount)。
+
+Select Top 10 orders.bnb_id, bnbs.name as bnb_name, sum(orders.amount) as may_amount 
+From orders
+Left Join bnbs on orders.bnb_id = bnbs.id
+Where orders.created_at >='2024-05-01' and orders.created_at < '2024-06-01'
+And orders.currency = 'NTD'
+Group by orders.bnb_id, bnbs.name
+orders by sum(orders.amount) desc
+
+題目二
+在題目一的執行下,我們發現 SQL 執行速度很慢,您會怎麼去優化?請闡述您怎麼判斷與優化
+的方式
+
+先把這段語法拿去Execution Plan
+先看一下哪段語法最花時間，看有沒有機會先透過撈取欄位的方式或順序，或是加上index
+只撈取所需要的欄位，不要撈取不需要的欄位
+因為SQL在判斷式裡，第一個不合，後面就不會再呼叫來判斷了，所以可以先把最有可能的條件放在前面來優化
+如果還是不行，可以考慮把資料庫的資料做cache
+或是做partitioning，把資料庫的資料做分散式處理
+但還是要看需求來做優化，不是每個地方都適合做cache或是partitioning
+
+
+架構設計:
+如果由您來規劃線上通訊服務,您會怎麼設計?請提供您的設計文件,並敘述您的設計目標
+
+1.設計目標
+安全性：確保所有通訊內容都是加密的。
+可擴展性：系統應該能夠支持從小規模到大規模的用戶增長。
+高可用性：服務應該具有高可用性和容錯能力。
+跨平台兼容性：服務應該支援多種平台 讓用戶可以在不同設備上使用。
+即時性：確保消息和語音/視訊通話的即時傳輸。
+2. 系統架構
+2.1 API 服務：使用 python 和 Flusk 框架建立 RESTful API 
+    並且採用微服務讓架構增加擴展性及可用性
+    若有需要花大量時間的等待的功能 可考慮加上async設計
+    若有非即時性的功能可考慮加上MQ設計
+2.2 Database：
+使用 PostgreSQL 存儲用戶數據和消息記錄；
+若有必要可使用 Redis 作為快取和消息隊列。
+使用Amazon S3存儲圖片和影片。
+2.3 安全性
+傳輸加密：使用 TLS/SSL 確保User與Server之間的所有通信都是安全的。
+端對端加密：確保訊息內容只能被實際的通信雙方讀取。
+身份驗證：使用 OAuth和JWT進行用戶身份驗證。
+2.4 部署和維護
+容器化：使用Docker，以方便depoly和容易放到各種環境運行(AWS,GCP...)。
+CI/CD： 使用 Jenkins 或 GitHub Actions 實現 CI/CD，自動化測試和部署, 包含unit test, pylint test, black scan, automation test等等。
+Monitor： 使用 Prometheus,Grafana監控系統性能，拉出dashboard可以每日daily快速查看服務狀況
+Log: 使用Elasticsearch,Kibana處理log數據方便查詢問題。
+
